@@ -1,0 +1,22 @@
+<h3>Product List</h3>
+
+<table class="table" appHighlight>
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Price</th>
+      </tr>
+    </thead>
+     <tbody>
+      <tr *ngFor="let  item of productList">
+        <td>{{item.productId}}</td>
+        <td title="Click Here To update Product Price"><a routerLink = '/product/update-product/{{item.title}}'>{{item.title}}</a></td>
+        <td>{{item.price | currency}}</td>
+        <!-- <td><i (click)="deleteProduct(item.id)" class="fa fa-trash"></i> /<a routerLink="/admin/update-product/{{item.id}}"> <span class="glyphicon glyphicon-edit"></span> </a> </td> -->
+      </tr>
+    </tbody> 
+  </table>
+  <div>
+    <p style="background-color: red;">{{errorMessage}}</p>
+</div>

@@ -1,0 +1,32 @@
+<p>add-product works!</p>
+
+<div *ngIf="alert" class="alert alert-warning alert-dismissible fade show" role="alert" >
+    <strong>Success!</strong> Data entered succesfully
+    <button (click)="closeAlert()" type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+   
+<form [formGroup]="addProduct" (ngSubmit)="collectProductData()" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+      <label>Enter ID</label><br>
+      <input type="text" class="form-control"  formControlName="productId" placeholder="Enter Id">
+      <!-- <span *ngIf="addProduct.get('customerID').invalid && addProduct.get('customerID').touched " style="color: red;"> ID Required</span><br> -->
+     
+      <label>Enter Name</label><br>
+       <input type="text" class="form-control" formControlName="title" placeholder="Enter Name">
+        <!-- <span *ngIf="addProduct.get('name').invalid && addProduct.get('name').touched " style="color: red;">  Name Required</span><br> -->
+     
+       <label>Enter  Price</label><br>
+       <input type="text" class="form-control" formControlName="price" placeholder="Enter Price">
+       <!-- <span *ngIf="addProduct.get('address').invalid && addProduct.get('address').touched " style="color: red;"> Adress Required</span><br> -->
+    
+       <button type="submit" class="btn btn-primary" [disabled]="!addProduct.valid" >Submit</button>
+      </div>
+    </form>
+
+    <div>
+      <p style="background-color: red;">{{errorMsg }}</p>
+  </div>

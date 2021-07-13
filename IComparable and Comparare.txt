@@ -1,0 +1,130 @@
+********** IComparare**********
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CsharpConcepts.IComparableAndIComparer
+{
+    class CompareStudents : IComparer<Student>
+    {
+        /*Now If you want to consume your Student class and if you want to rearrange the data based on other Attributes of object in your list
+         * so for that purpose you can inherit Icomparer interface to your class(CompareStudents)
+         */
+        public int Compare(Student x, Student y)  //To get this method you can go to Icomparer and through quick options
+        {
+
+            //lets sort based on marks
+            if (x.Marks < y.Marks)
+                return 1;
+            else if (x.Marks > y.Marks)
+                return -1;
+            else
+                return 0;
+        }
+    }
+}
+
+*****************************
+
+
+************ IComparable**************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CsharpConcepts.IComparableAndIComparer
+{
+    class Student : IComparable<Student>
+    {
+        private int sid;
+        private string name;
+        private int @class;
+        private int marks;
+
+        public int Sid { get => sid; set => sid = value; }
+        public string Name { get => name; set => name = value; }
+        public int Class { get => @class; set => @class = value; }
+        public int Marks { get => marks; set => marks = value; }
+
+        public int CompareTo(Student other)  //This Method is automatically implemented through quick refactorings 
+        {
+            //other variable meanns next object 
+            //Now in this method we are going to compare Student objects i.e s1,s2,s3,s4,s5,s6
+
+            if(this.Sid > other.Sid)
+            {
+                return 1;
+            }
+            else if(this.Sid < other.Sid)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+            //this will sort in ascending , wrt to sid 
+            //If you want to sort in descending order just interchage 1 and -1
+            //or you just call reverse() method thats all
+        }
+    }
+    
+}
+
+***************************************
+
+
+*************Driver Class************
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CsharpConcepts.IComparableAndIComparer
+{
+    class TestStudent
+    {
+        public static void Main(string[] args)
+        {
+            Student s1 = new Student { Sid = 101, Name = "Kiran", Class = 10, Marks = 20 };
+            Student s2 = new Student { Sid = 103, Name = "manu", Class = 10, Marks = 30 };
+            Student s3 = new Student { Sid = 102, Name = "vihari", Class = 10, Marks = 40 };
+            Student s4 = new Student { Sid = 106, Name = "sanjay", Class = 10, Marks = 50 };
+            Student s5 = new Student { Sid = 105, Name = "shilpa", Class = 10, Marks = 60 };
+            Student s6 = new Student { Sid = 104, Name = "divya", Class = 10, Marks = 70 };
+
+            List<Student> students = new List<Student>() { s1, s2, s3, s4, s5, s6 };
+
+            //students.Sort(); -> If You do this you will get error  as our list is containing complex type(Student) . Having multiple values and hence 
+            // compiler gets confused to decide based on which value to sort 
+            // But sort() method will work on list having single values in it . ie of value type 
+
+            // So we have to explicitly write logic for Student to make our compiler understand based on which attribute , sorting should happen 
+            //So for that we have to implement a IComparable interface of Student Type 
+
+            /*
+            If You Want to sort based on marks - for that we have already created Icomparer class i.e CompareStudents  
+            CompareStudents obj = new CompareStudents();
+           // students.Sort(obj);
+            */
+            students.Sort(); //If you don't pass anything into Sort() , sorting is done based on Sid , Try Passing Obj Of CompareStudents class
+                             // i.e uncomment 66th line and 67th line and comment 69th line . Your list will be sorted based on marks 
+                             //students.Reverse(); - iF you want to reverse the list 
+
+            foreach (Student stu in students)
+            {
+                Console.WriteLine(stu.Sid + " " + stu.Name + " " + stu.Class + " " + stu.Marks);
+            }
+            Console.ReadKey();
+
+        }
+    }
+}
+
+**************************************

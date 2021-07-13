@@ -1,0 +1,51 @@
+*************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CsharpConcepts.IEquatable
+{
+    class Student :IEquatable<Student>
+    {
+        public int StudentId { set; get; }
+        public string Name { set; get; }
+        public byte Age { set; get; }
+
+        public bool Equals(Student other)
+        {
+            return (this.StudentId == other.StudentId);
+        }
+    }
+}
+
+*************
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CsharpConcepts.IEquatable
+{
+    class TestMain
+    {
+        public static void Main(string []args)
+        {
+            Student student1 = new Student() { StudentId = 1, Name = "kiran", Age = 25 };
+            Student student2 = new Student() { StudentId = 2, Name = "Vihari", Age = 22 };
+            Student student3 = new Student() { StudentId = 1, Name = "Anikit", Age = 24 };
+
+            Console.WriteLine(student1.Equals(student2));
+            Console.WriteLine(student1.Equals(student3));
+
+            Console.ReadKey();
+
+            
+
+        }
+    }
+}
+**************

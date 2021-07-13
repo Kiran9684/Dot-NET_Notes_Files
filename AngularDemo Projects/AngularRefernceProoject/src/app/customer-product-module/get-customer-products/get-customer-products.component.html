@@ -1,0 +1,24 @@
+<p>get-customer-products works!</p>
+<table class="table" appHighlight>
+    <thead>
+      <tr>
+        <th scope="col">Customer ID</th>
+        <th scope="col">Customer Name</th>
+        <th scope="col">Customer Address</th>
+        <th scope="col">Product ID</th>
+        <th scope="col">Product Name</th>
+        <th scope="col">Product Price</th>
+      </tr>
+    </thead>
+     <tbody>
+       <tr *ngFor="let  item2 of dataList">
+        <td (click)="deleteProduct(item2.customerID)" title="Want To Delete ?" style="text-decoration: underline;">{{item2.customerID}}</td>
+        <td>{{item2.customer.name}}</td>
+        <td>{{item2.customer.address}}</td>
+        <td>{{item2.productId}}</td>
+        <td>{{item2.product.title}}</td>
+        <td>{{item2.product.price}}</td>
+        <!-- <td><i (click)="deleteProduct(item2.customerID)" class="fa fa-trash"></i></td> -->
+      </tr>
+    </tbody> 
+  </table>

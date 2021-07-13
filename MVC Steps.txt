@@ -1,0 +1,16 @@
+Note:
+	Refer Tutorial Teachers To Learn MVC
+
+Steps :
+
+1.create a project(School Management System) in VS (Asp.NET Web Application(.NET Framework)
+2.While creating project change authentication to Individual user account (To add Oauth Authentication)
+3.After Creating project goto -> model folder and create your modal classes.(Student.cs , Staff.cs)
+4.Now goto SSMS and create databases(SchoolManagementMVC) and tables(Staff,Student) according to your modal classes (build relations with tables if necessary)
+5.Now in your project create a folder named Repository and Repository classes(Student Repository,Staff Repository) into it.
+6.Add your ADO.NET code into your repository classes performing CRUD.
+7.Now Create Controllers (StudentController , StaffController)
+8.In Controller add functionality , Views and Exception Handling .
+
+
+Project Reference : SchoolManagementSystem (saved in Mindtree reviews folder)

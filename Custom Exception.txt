@@ -1,0 +1,41 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+
+namespace Week1Assignments.Exceptions
+{
+    class CustomExceptionDemo
+    {
+        public static void Main(string []args)
+        {
+            try
+            {
+                throw new UserAlreadyLoggedInException("User Already Loggen In - No Duplicate Sessions Allowed");
+            }
+            catch(UserAlreadyLoggedInException ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+    }
+
+    public class UserAlreadyLoggedInException :Exception  //custom Exception 
+    {
+        public UserAlreadyLoggedInException():base()
+        {
+
+        }
+        public UserAlreadyLoggedInException(string message) :base(message)  //Calling parent class constructor first then entering into child class constructor
+        {
+
+        }
+        //to provide our class the ability to track inner exceptions 
+        public UserAlreadyLoggedInException(string message , Exception innerException) : base(message,innerException)
+        {
+
+        }
+
+    }
+
+}

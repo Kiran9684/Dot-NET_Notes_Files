@@ -1,0 +1,544 @@
+Steps : [Code First Approach Is Used ]
+
+1. Create ASP . Net Core WEB API Project 
+2. Create Entities Folder and add Entities into it 
+
+=> Entities are created for many to many relationship	
+
+Ex : 
+*******
+namespace CustomerProductCC.Entities
+{
+    public class Product
+    {
+        [Key]
+        public string ProductId { get; set; }
+        [Required]
+        [StringLength(20)]
+        public string Title { get; set; }
+
+        [Required]
+        public double Price { get; set; }
+        public IList<CustomerProduct> CustomerProducts { get; set; }     <<-------------------
+    }
+}
+*******
+namespace CustomerProductCC.Entities
+{
+    public class Customer
+    {
+        [Key]
+        public string CustomerID { get; set; }
+        [Required]
+        [StringLength(20)]
+        public string Name { get; set; }
+
+        [Required]
+        [StringLength(100)]
+        public string Address { get; set; }
+
+        public IList<CustomerProduct> CustomerProducts { get; set; }    <<-------------------
+    }
+}
+*******
+namespace CustomerProductCC.Entities
+{
+    public class CustomerProduct
+    {
+        [ForeignKey("Product")]                                   
+        public string ProductId { get; set; }               <<------------------
+        public Product Product { get; set; }	        <<------------------
+
+        [ForeignKey("Customer")]
+        public string CustomerID { get; set; }            <<------------------
+        public Customer Customer { get; set; }	         <<------------------	
+    }
+}
+
+*******
+
+3. Install These 2 Nuget Packages 
+	1.Microsoft.EntityFrameworkCore.SqlServer
+	2.Microsoft.EntityFrameworkCore.Tools 
+
+
+
+4. Now Create Context folder and Add Context Classe in it 
+*****
+using CustomerProductCC.Entities;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace CustomerProductCC.DataLayer
+{
+    public class CustomerProductDBContext : DbContext
+    {
+        public DbSet<Customer> Customers { get; set; }
+
+        public DbSet<Product> Products { get; set; }
+        public DbSet<CustomerProduct> CustomerProducts { get; set; }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer(@"Data Source=.;Initial Catalog=ProdCustomerCCDB;Integrated Security=True");
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CustomerProduct>().HasKey(sc => new { sc.CustomerID,sc.ProductId });
+        }
+    }
+}
+
+*****
+
+5. Add Migration in package manager console 
+	
+	1. add-migration <migration>
+	2. update-database
+[Now check your Tables in the SQL studio ]
+
+6. Create Service Folder and Add Service classes and service Interfaces and corresponding controllers in controller folder  
+
+[1] 
+****
+
+namespace CustomerProductCC.Services
+{
+    public interface IProductService
+    {
+        bool AddProduct(Product product);
+        List<Product> GetProducts();
+
+        bool UpdateProduct(Product product);
+    }
+}
+****
+
+***
+
+namespace CustomerProductCC.Services
+{
+    public class ProductService : IProductService
+    {
+        CustomerProductDBContext context = null;
+
+        public ProductService()
+        {
+            context = new CustomerProductDBContext();
+        }
+
+        public bool AddProduct(Product product)
+        {
+            context.Products.Add(product);
+            context.SaveChanges();
+            return true;
+
+        }
+
+        public List<Product> GetProducts()
+        {
+           List<Product> ProductList = context.Products.ToList();
+           return ProductList;
+        }
+
+        public bool UpdateProduct(Product product)
+        {
+            context.Products.Update(product);
+            context.SaveChanges();
+            return true;
+        }
+    }
+}
+
+***
+
+***
+
+namespace CustomerProductCC.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProductController : ControllerBase
+    {
+        private IProductService _service;
+        public ProductController(IProductService service)
+        {
+            _service = service;
+        }
+        // GET: api/<ProductController>
+        [HttpGet]
+        public IActionResult Get()
+        {
+            try
+            {
+              List<Product>ProductList =  _service.GetProducts() ;
+                return Ok(ProductList);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+       /* // GET api/<ProductController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
+        {
+            return "value";
+        }
+*/
+        // POST api/<ProductController>
+        [HttpPost]
+        public IActionResult Post(Product product)
+        {
+            try
+            {
+                _service.AddProduct(product);
+                return Created("Created", product);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // PUT api/<ProductController>/5
+        [HttpPut]
+        public IActionResult Put(Product product)
+        {
+            try
+            {
+                _service.UpdateProduct(product);
+                return Ok("Updated");
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /*// DELETE api/<ProductController>/5
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }*/
+    }
+}
+
+***
+
+[2]
+****
+
+namespace CustomerProductCC.Services
+{
+    public interface ICustomerService
+    {
+        bool AddCustomer(Customer customer);
+
+        List<Customer> GetCustomers();
+    }
+}
+
+****
+****
+
+namespace CustomerProductCC.Services
+{
+    public class CustomerService : ICustomerService
+    {
+        CustomerProductDBContext context = null;
+
+        public CustomerService()
+        {
+            context = new CustomerProductDBContext();
+        }
+
+        public bool AddCustomer(Customer customer)
+        {
+            context.Customers.Add(customer);
+            context.SaveChanges();
+            return true;
+        }
+
+        public List<Customer> GetCustomers()
+        {
+           List<Customer> customerList =  context.Customers.ToList();
+           return customerList; 
+        }
+    }
+}
+
+****
+
+***
+
+namespace CustomerProductCC.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CustomerController : ControllerBase
+    {
+        private ICustomerService _service;
+        public CustomerController(ICustomerService service)
+        {
+            _service = service;
+        }
+
+        // GET: api/<CustomerController>
+        [HttpGet]
+        public IActionResult Get()
+        {
+            try
+            {
+              List<Customer> customerList =  _service.GetCustomers();
+              return Ok(customerList);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+       /* // GET api/<CustomerController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
+        {
+            return "value";
+        }*/
+
+        // POST api/<CustomerController>
+        [HttpPost]
+        public IActionResult Post(Customer customer)
+        {
+            try
+            {
+                _service.AddCustomer(customer);
+                return Created("Added", customer);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+       /* // PUT api/<CustomerController>/5
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
+        {
+        }*/
+
+       /* // DELETE api/<CustomerController>/5
+        [HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }*/
+    }
+}
+
+***
+[3]
+***
+
+namespace CustomerProductCC.Services
+{
+    public interface ICustomerProductService
+    {
+        bool AddCustomerProduct(CustomerProduct customerProduct);
+
+        List<CustomerProduct> GetCustomersWithProducts();
+
+        bool DeleteProductByCustId(string id);
+
+    }
+}
+***
+
+***
+
+namespace CustomerProductCC.Services
+{
+    public class CustomerProductService : ICustomerProductService
+    {
+        CustomerProductDBContext context = null;
+        public CustomerProductService()
+        {
+            context = new CustomerProductDBContext();
+        }
+        public bool AddCustomerProduct(CustomerProduct customerProduct)
+        {
+            context.CustomerProducts.Add(customerProduct);
+            context.SaveChanges();
+            return true;
+        }
+
+        public bool DeleteProductByCustId(string id)
+        {
+            Customer customer = context.Customers.Find(id);
+            List<CustomerProduct> CustomerProducts = context.CustomerProducts.Where(m => m.CustomerID== id).ToList();
+
+            context.Customers.Remove(customer);
+
+            foreach (var item in CustomerProducts)
+            {
+                context.CustomerProducts.Remove(item);
+                // context.SaveChanges();
+
+            } 
+            context.SaveChanges();
+            return true;
+        }
+
+        public List<CustomerProduct> GetCustomersWithProducts()
+        {
+            //throw new NotImplementedException();
+            List<CustomerProduct> list = context.CustomerProducts.ToList();
+            foreach(var item in list)
+            {
+                item.Customer = context.Customers.Find(item.CustomerID);
+                item.Customer.CustomerProducts = null;
+                item.Product = context.Products.Find(item.ProductId);
+                item.Product.CustomerProducts = null;
+            }
+            return list;
+        }
+    }
+}
+
+***
+
+***
+
+namespace CustomerProductCC.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class CustomerProductController : ControllerBase
+    {
+        private ICustomerProductService _service;
+        public CustomerProductController(ICustomerProductService service)
+        {
+            _service = service;
+        }
+        // GET: api/<CustomerProductController>
+        [HttpGet]
+        public IActionResult Get()
+        {
+            try
+            {
+                return Ok(_service.GetCustomersWithProducts());
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /*// GET api/<CustomerProductController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
+        {
+            return "value";
+        }*/
+
+        // POST api/<CustomerProductController>
+        [HttpPost]
+        public IActionResult Post(CustomerProduct customerProduct)
+        {
+            try
+            {
+                _service.AddCustomerProduct(customerProduct);
+                return Created("created", customerProduct);
+            }
+            catch(Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+       /* // PUT api/<CustomerProductController>/5
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
+        {
+        }*/
+
+        // DELETE api/<CustomerProductController>/5
+        [HttpDelete("{id}")]
+        public IActionResult Delete(string id)
+        {
+            try
+            {
+                return Ok(_service.DeleteProductByCustId(id));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+
+        }
+    }
+}
+
+***
+
+7. Now Add Dependency Injection and Add cors for angular in start up file 
+
+
+namespace CustomerProductCC
+{
+    public class Startup
+    {
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public IConfiguration Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddCors();					<<<-----------------
+            services.AddScoped<ICustomerService, CustomerService>();	<<<-----------------
+            services.AddScoped<IProductService, ProductService>();		<<<-----------------
+            services.AddScoped<ICustomerProductService, CustomerProductService>();		<<<-----------------
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "CustomerProductCC", Version = "v1" });
+            });
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CustomerProductCC v1"));
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+   app.UseCors(options =>                            <<<-----------------
+    options.AllowAnyOrigin()		<<<-----------------  [Always keep these lines in between app.UseRouting and app.UseAuthoriazation only]
+    .AllowAnyMethod() 		<<<-----------------
+    .AllowAnyHeader());
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+         		
+        }
+    }
+}

@@ -1,0 +1,288 @@
+# Mango DB :
+-------------
+
+## Why MongoDB
+
+1. Free and Open Source
+
+2.Cross platform
+
+3.Document oriented database(JSON Objects)
+```
+{
+    "feild1" : "value1",
+    "feild1" : "value2",
+}
+```
+
+## Database , Documents and Collections :
+
+### Database 
+Physical container of collections . Database can also have any no of collections .
+        
+### Collection 
+Group of MongoDB Documents.
+consider it as a table (Hypothetically).
+collection do not have concept of Joins ( We can achieve joins functionality using aggregation in MongoDb).
+
+
+### Documents  
+Is a simple key-value pair data
+```
+    Ex:  {
+        "Firstname" : "Ram",
+        "Lastname" : "Lal",
+        "email": "xyz@.com",
+        "Age": 25
+      }
+```
+## Note : 
+Multiple documents will become a collection 
+
+-Document can have any data type as long as it is valid and compatible with Mongo DB types .
+
+-MongoDb will automatically add a key (always unique value )for each document . 
+
+-In MongoDB schema is userdefined , they are not fixed or static
+
+----------------------------------------------------
+Practicals :
+
+1. Creating and Dropping Database:
+---------------------------------------
+For creating DB :
+command ->  use<database-name>
+Note : This newly created db will not be visible unlesss you insert a document into it .
+
+>Ex: > use kirandb
+
+o/p: switched to db kirandb
+
+For Removing DB:
+command -> db.dropDatabase()
+
+>Ex: > db.dropDatabase()
+
+o/p : { "ok" : 1 }
+
+[To drop database first select the db using 'use' then drop it ]
+
+2. UseFull Commands
+------------------------
+1.)
+//To list all the databases present in the system :
+
+> show dbs     
+
+o/p:
+CategoriesDB  0.000GB
+admin         0.000GB
+config        0.000GB
+local         0.000GB
+practiceDB    0.000GB
+
+2.)
+//To check the current database we are working with 
+
+> db
+
+o/p:
+kirandb
+
+3.Create and Drop Collections :
+----------------------------------
+For Creating collection :
+command -> db.createCollection(name,options)
+-name is mandatory , options is optional 
+
+>Ex: > db.createCollection("movielist")
+
+{ "ok" : 1 }
+
+For Dropping collection :
+command -> db.<collection name>.drop()
+
+Ex:
+> db
+
+kirandb
+
+> db.movielist.drop()
+true
+
+4.DataTypes In MongoDb:
+------------------------------
+-BSON ,JSON,Integer,Boolean,Double,Arrays,Object,Null,Date,Timestamp
+
+5.Inserting Documents Into Collection :
+-------------------------------------------
+command Type 1
+
+ db.<collectionname>.insert({"keyname": "Value"}) 
+
+// with insert you can put only one JSON object at a time .
+
+command Type2 
+
+db.<collectionname>.insertMany([{"keyname": "Value"},{"key": "Value"}]) 
+
+// with insertMany you have to put array of JSON Objects.
+
+Ex:
+> db
+
+kirandb
+
+> db.movielist.drop()
+
+
+
+true
+
+
+> db
+
+kirandb
+
+> db.createCollection("movielist")
+
+{ "ok" : 1 }
+
+> db.movielist.insert({"name":"Dabang","Actor":"SalmanKhan","Budget":"100crore","Ticket":250})
+
+WriteResult({ "nInserted" : 1 })
+
+> db.movielist.insertMany([{"name":"ChennaiExpress"},{"name":"Kick","Actor":"Salamn"}])
+
+
+{
+        "acknowledged" : true,
+        "insertedIds" : [
+                ObjectId("60859f7857ea9fdf26611ee4"),
+                ObjectId("60859f7857ea9fdf26611ee5")
+        ]
+}
+
+
+6.Reading Documents From Collections:
+--------------------------------------------
+Type 1:
+command 
+
+db.<collection name >.find()  //lists all the documents present in collection 
+
+Ex:
+
+> db.movielist.find()
+
+{ "_id" : ObjectId("60859f0357ea9fdf26611ee3"), "name" : "Dabang", "Actor" : "SalmanKhan", "Budget" : "100crore", "Ticket" : 250 }
+
+{ "_id" : ObjectId("60859f7857ea9fdf26611ee4"), "name" : "ChennaiExpress" }
+
+{ "_id" : ObjectId("60859f7857ea9fdf26611ee5"), "name" : "Kick", "Actor" : "Salamn" }
+
+> db.movielist.find().pretty()
+
+{
+        "_id" : ObjectId("60859f0357ea9fdf26611ee3"),
+        "name" : "Dabang",
+        "Actor" : "SalmanKhan",
+        "Budget" : "100crore",
+        "Ticket" : 250
+}
+
+{ "_id" : ObjectId("60859f7857ea9fdf26611ee4"), "name" : "ChennaiExpress" }
+
+{
+        "_id" : ObjectId("60859f7857ea9fdf26611ee5"),
+        "name" : "Kick",
+        "Actor" : "Salamn"
+}
+
+
+Type 2:
+command 
+db.<collection name >.findOne() //To find first document in collection
+
+Ex:
+
+> db.movielist.findOne()
+
+{
+        "_id" : ObjectId("60859f0357ea9fdf26611ee3"),
+        "name" : "Dabang",
+        "Actor" : "SalmanKhan",
+        "Budget" : "100crore",
+        "Ticket" : 250
+}
+
+Type 3:
+
+//By setting query conditions
+
+Ex:
+
+> db.movielist.findOne({"Ticket":250})
+
+{
+        "_id" : ObjectId("60859f0357ea9fdf26611ee3"),
+        "name" : "Dabang",
+        "Actor" : "SalmanKhan",
+        "Budget" : "100crore",
+        "Ticket" : 250
+}
+
+Type 4: 
+
+ findOneAndReplace(...............)//Google it 
+
+findOneAndDelete(...........)//google it
+
+
+7.Updating Documents:
+---------------------------
+There are many ways to update . 
+
+Type 1:
+command 
+```
+ db.<collectionname>.update(
+    {"key":"value"},
+    {
+        $set : {" key":"value" }                              ---here you can also add new data
+    }
+)
+```
+
+Ex:
+
+> db.movielist.update({"Ticket":250},{$set:{"Ticket":300}})
+
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+
+8.Deleting Documents:
+-------------------------
+commands 
+
+ db.<collectionname>.deleteOne({"key":"value"})
+
+->db.<collectionname>.deleteMany({})  //To delete All the documents
+
+Ex:
+
+> db.movielist.deleteOne({"Actor":"SalmanKhan"})
+
+{ "acknowledged" : true, "deletedCount" : 1 }
+
+
+Note : To list all the collections in a Db
+
+>db.getCollectionNames()
+
+
+
+9. Data Model Tree Structure 
+--------------------------------
+
+Link : https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-parent-references/

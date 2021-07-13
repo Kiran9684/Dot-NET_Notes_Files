@@ -1,0 +1,70 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+
+namespace Week1Assignments.Exceptions
+{
+    class InnerException
+    {
+        public static void Main(string[] args)
+        {
+            try
+            {
+                try
+                {
+                    Console.WriteLine("Enter First Numer");
+                    int firstNum = Convert.ToInt32(Console.ReadLine());
+                    Console.WriteLine("Enter Second Number");
+                    int secondNum = Convert.ToInt32(Console.ReadLine());
+
+                    int result = firstNum / secondNum;
+                }
+                catch (DivideByZeroException e) //suppose if second number is zero
+                {   //let's write exception details into the files 
+                    string filePath = "C:\\SampleFiles\\Log.txt";
+                    if (File.Exists(filePath))                 // InnerException Concept 
+                    {
+                        StreamWriter sw = new StreamWriter(filePath);
+                        sw.Write(e.GetType().Name); //to write content to file
+                        sw.WriteLine();
+                        sw.Write(e.Message);
+                        Console.WriteLine("You Are Trying To Divide First Num By Zero . Not Allowed ");
+                        Console.WriteLine(e.Message);
+                    }
+                    else
+                    {
+                        throw new FileNotFoundException("File Not Found", e);  //Wraping . FileNotFound Object will be thrown along with 
+                                                                               // inner exception object e , due to inner exception property of the objects.And this is called as Wrapping 
+                    }
+                }
+                catch (OverflowException e) // suppose input number exceedes limit value
+                {
+                    Console.WriteLine("Input Value limit exceeded");
+                    Console.WriteLine(e.Message);
+                }
+                catch (FormatException e) //suppose user enters other input formats instead of int numbers , like strings or float vals
+                {
+                    Console.WriteLine(e.Message);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                finally
+                {
+                    Console.WriteLine("Finally Block");
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Current Exception" + exception.Message);
+                if (exception.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception" + exception.InnerException.Message);
+                }
+
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+<h1>Customers List</h1>
+
+<table class="table" appHighlight>
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">Name</th>
+        <th scope="col">Address</th>
+      </tr>
+    </thead>
+     <tbody>
+      <tr *ngFor="let  item of customerList">
+        <td>{{item.customerID}}</td>
+        <td>{{item.name}}</td>
+        <td>{{item.address}}</td>
+        <!-- <td><i (click)="deleteProduct(item.id)" class="fa fa-trash"></i> /<a routerLink="/admin/update-product/{{item.id}}"> <span class="glyphicon glyphicon-edit"></span> </a> </td> -->
+      </tr>
+    </tbody> 
+  </table>

@@ -1,0 +1,892 @@
+Steps:
+1.Create ASP.NetCore Web Api Project ->[Name The Project with proper name ending with .WebApi]
+2.Create Folder Structure -[Models,Repository,Services and Controllers]
+3.
+Entities are created for One to Many
+
+****************
+ public class Student
+    {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+
+        [ForeignKey("Event")]
+        public int? EventId { get; set; }  //Here ?(nullable) is used to make that particular column nullable.
+
+        public Event Event { get; set; }
+    }
+****************
+
+****************
+public class Event
+    {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
+        public int Id { get; set; }
+        [Required]
+        public string Name { get; set; }
+        public ICollection<Student> Students { get; set; }
+    }
+****************
+
+4.Install These 2 Packages 
+
+	1.Microsoft.EntityFrameworkCore.SqlServer
+	2.Microsoft.EntityFrameworkCore.Tools 
+
+5.In Your Repository forlder create DB context class
+
+********
+public class SportDBContext :DbContext
+    {
+        public DbSet<Event> Events { get; set; }
+
+        public DbSet<Student> Students { get; set; }
+
+        public SportDBContext(DbContextOptions<SportDBContext> options) : base(options)
+        {
+
+        }
+
+    }
+********
+6.then go to appp settings.json and add this line 
+
+**********
+{
+  "ConnectionStrings" : { "DefaultConnection" :"Data Source=.;Initial Catalog=ProdCustomerCCDB;Integrated Security=True"}    <<---------
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+*********
+
+
+7. Goto Startup file and in configureServices method add this line .
+
+********
+ public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<UserDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));    <<<--------
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "UsersWebAPI", Version = "v1" });
+            });
+        }
+********
+
+8.Add Migrations:
+	1.add-migration initial
+	2.update-database
+
+9.Now In Services Forlder create service files :
+
+1.] IEventService:
+***********************
+public interface IEventService
+    {
+        Task<bool> AddEvent(Event e);
+
+        Task<bool> UpdateEvent(Event e);
+
+        Task<bool> DeleteEvent(int id);
+
+        Task<List<Event>> GetAllEvents();
+    }
+***********************
+
+
+2.] IStudentService:
+****************************
+  public interface IStudentService
+    {
+        Task<bool> AddStudent(Student student);
+    }
+****************************
+
+3.] EventService:
+
+*********
+ public class EventService : IEventService
+    {
+        private readonly SportDBContext _context = null;
+
+        public EventService()
+        {
+            _context = new SportDBContext();
+        }
+
+        public async Task<bool> AddEvent(Event e)
+        {
+            bool flag = true;
+
+            Event e1 = await _context.Events.FindAsync(e.Id);
+            if(e1 == null)
+            {
+                await _context.Events.AddAsync(e);
+                int check = await _context.SaveChangesAsync();
+                if (check < 0)
+                {
+                    flag = false;
+                }
+                return flag;
+
+            }
+            else
+            {
+                throw new InvalidIdException("ID Already Present");
+            }
+           
+        }
+
+        public async Task<bool> DeleteEvent(int id)
+        {
+            bool flag = true;
+            Event e = await _context.Events.FindAsync(id);
+            List<Student> students = _context.Students.Where(s => s.Id == id).ToList();
+            foreach (var item in students)
+            {
+                item.EventId = null;
+               // _context.Students.Remove(item);
+            }
+            _context.Remove(e);
+            int check = await _context.SaveChangesAsync();
+            if (check < 0)
+            {
+                flag = false;
+            }
+
+            return flag;
+           
+        }
+
+
+        public async Task<List<Event>> GetAllEvents()
+        {
+            List<Event> events = await _context.Events.ToListAsync();
+            return events;
+        }
+
+        public async Task<bool> UpdateEvent(Event e)
+        {
+            bool flag = true;
+            _context.Events.Update(e);
+            int check = await _context.SaveChangesAsync();
+            if (check < 0)
+            {
+                flag = false;
+            }
+
+
+            return flag;
+
+        }
+    }
+*********
+
+4.] StudentService:
+***********
+ SportDBContext context = null;
+        public StudentService()
+        {
+            context = new SportDBContext();
+        }
+        public async Task<bool> AddStudent(Student student)
+        {
+
+            Student student1 = await context.Students.FindAsync(student.Id);
+
+            if (student1 == null)
+            {
+                await context.Students.AddAsync(student);
+                int val = await context.SaveChangesAsync();
+                if (val < 0)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                throw new InvalidIdException("This ID IS Already Present");
+            }
+
+        }
+
+***********
+
+
+10.Now in controller folder create controller class:
+
+******************
+ public class EventController : ControllerBase
+    {
+        private IEventService _eventService;
+        public EventController(IEventService service)
+        {
+            _eventService = service;
+        }
+        // GET: api/<EventController>
+        [HttpGet]
+        public async Task<IActionResult> GetAllEvents()
+        {
+            try
+            {
+
+                return Ok(await _eventService.GetAllEvents());
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // GET api/<EventController>/5
+        /* [HttpGet("{id}")]
+         public string Get(int id)
+         {
+             return "value";
+         }
+ */
+        // POST api/<EventController>
+        [HttpPost]
+        public async Task<IActionResult> AddEvent(Event e)
+        {
+            try
+            {
+                await _eventService.AddEvent(e);
+                return Created("Created", e);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // PUT api/<EventController>/5
+        [HttpPut]
+        public async Task<IActionResult> UpdateEvent(Event e)
+        {
+            try
+            {
+                if (await _eventService.UpdateEvent(e))
+                {
+                    return Ok("Updated");
+                }
+                else
+                {
+                    return BadRequest("Not Updated");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // DELETE api/<EventController>/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteEvent(int id)
+        {
+            try
+            {
+                await _eventService.DeleteEvent(id);
+                return Ok("Deleted");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // GET api/<EventController>/5
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetByEventId(byte id)
+        {
+            try
+            {
+                return Ok(await _eventService.GetEvent(id));
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+    }
+******************
+
+*****************
+  public class StudentController : Controller
+    {
+        private IStudentService _service;
+        public StudentController(IStudentService service)
+        {
+            _service = service;
+        }
+
+        // GET: api/<StudentController>
+        /* [HttpGet]
+         public IEnumerable<string> Get()
+         {
+             return new string[] { "value1", "value2" };
+         }*/
+
+        // GET api/<StudentController>/5
+        /* [HttpGet("{id}")]
+         public string Get(int id)
+         {
+             return "value";
+         }*/
+
+        // POST api/<StudentController>
+        [HttpPost]
+        public async Task<IActionResult> AddStudent(Student student)
+        {
+            try
+            {
+                await _service.AddStudent(student);
+                return Created("Created", student);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // PUT api/<StudentController>/5
+        /*[HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
+        {
+        }*/
+
+        // DELETE api/<StudentController>/5
+        /*[HttpDelete("{id}")]
+        public void Delete(int id)
+        {
+        }*/
+    }
+*****************
+
+
+11. Now Add Dependency Injection and also Add connections to the angular
+
+****************
+public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<SportDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddCors(); 									<<<-----------------
+            services.AddScoped<IStudentService, StudentService>();						<<<-----------------
+            services.AddScoped<IEventService, EventService>();						<<<-----------------
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "SportsManagement.WebApi", Version = "v1" });
+            });
+        }
+
+
+ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SportsManagement.WebApi v1"));
+            }
+
+            app.UseHttpsRedirection();
+
+            app.UseRouting();
+
+            app.UseCors(options =>                          <----- 
+             options.AllowAnyOrigin()	<<----	
+             .AllowAnyMethod() 		<<----
+         
+             .AllowAnyHeader());
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+        }
+****************
+
+12.]
+
+Angular Part :
+----------------
+
+1. Create a project 
+2.Create A service folder and add a service file into it 
+3.Now Go to environment folder and add base url :
+
+********* environtment.ts
+
+export const environment = {
+  production: false,
+  baseUrl:'https://localhost:44349/api',           <<<----------------
+};
+*********
+
+4. Now Go to your service annd service code :
+
+***********
+import { HttpClient } from '@angular/common/http';           <<<<------------
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';			<<<<<<<-----------
+import { environment } from 'src/environments/environment';     <<<<<<<---------
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ApiServiceService {
+
+  constructor(private httpClient: HttpClient) { }
+
+  get(path): Observable<any> {
+    return this.httpClient.get(`${environment.baseUrl}/${path}`);
+  }
+  post(path, data): Observable<any> {
+    return this.httpClient.post(`${environment.baseUrl}/${path}`, data);
+  }
+
+  delete(path): Observable<any> {
+    return this.httpClient.delete(`${environment.baseUrl}/${path}`);
+  }
+  update(path, data): Observable<any> {
+    return this.httpClient.put(`${environment.baseUrl}/${path}`, data);
+  }
+
+  getById(path,id): Observable<any> {
+    return this.httpClient.get(`${environment.baseUrl}/${path}/${id}`);
+  }
+}
+
+***********
+
+5. Create Modules : 
+
+
+Sample command :  ng g module event --route event --module app.module     
+
+[This command will automatically implement lazy loading in app.routing module  and also will routing module for each module you create , there you must provide routes for components in your module ]
+ 
+******** app-routing.module.ts*********
+
+import { NgModule } from '@angular/core';
+import { Routes, RouterModule } from '@angular/router';
+
+const routes: Routes = [
+  {
+    path : "student",
+    loadChildren : ()=> import('../app/student/student.module').then(m =>m.StudentModule)
+  },
+  {
+    path : "event",
+    loadChildren : ()=> import('../app/event/event.module').then(m =>m.EventModule)
+  },
+  {
+  path : ' ' ,
+  redirectTo :'Home',
+  pathMatch : 'full'
+  },
+  {
+    path : '**',
+    redirectTo :'Home',
+    pathMatch :'full'
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(routes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule { }
+
+*******
+
+
+6. Now Goto Index.html file and all the CDNs 
+******
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SportsProject</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+    crossorigin="anonymous"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous" />
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+  <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+    crossorigin="anonymous"></script>
+
+</head>
+
+
+<body>
+  <app-root></app-root>
+</body>
+</html>
+******
+
+7.Then Configure your app.component.html file (For nav bar)
+******
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Sports Event Management</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav"
+    aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+      <li class="nav-item active">
+        <a class="nav-link" href="#" ><button type="button" class="btn btn-primary btn-sm">Home</button> </a>
+      </li>
+      <li class="nav-item" style="padding: 1px;margin-top: 12px;">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Event Menu
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><a class="dropdown-item" href="#" id="addevent">Add Event</a></li>
+            <li><a class="dropdown-item" href="event/get-events" id="customerlist">Event List</a></li>
+            
+          </ul>
+        </div>
+      </li>
+      <li class="nav-item dropdown" style="padding: 1px; margin-top: 12px;">
+        <div class="dropdown">
+          <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Student Menu
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+            <li><a class="dropdown-item" href="#">Add Student</a></li>
+          </ul>
+        </div>
+      </li>
+     
+
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+
+******
+
+8. Now Create The necessary components for Event Module :
+
+	command -> ng g c <modulename/componentName>
+
+-create three coponents 1) add-event 2) list-event 3) update-event
+
+9. Now go to routing file of that particular module (event-routing.module.ts) and add routes to the above 3components 
+
+***************
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+import { AddEventComponent } from './add-event/add-event.component';
+import { ListEventComponent } from './list-event/list-event.component';
+import { UpdateEventComponent } from './update-event/update-event.component';
+
+
+const routes: Routes = [
+ { path: '', redirectTo: 'list-event',pathMatch: 'full' },                         <-------------
+ {path:'list-event',component:ListEventComponent},		  <-------------
+ { path:'add-event',component:AddEventComponent},		  <-------------
+ { path:'updateevent/:id',component:UpdateEventComponent}	  <-------------
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class EventRoutingModule { }
+
+***************
+
+10. Now add this route paths in the app.component.html 
+
+****************
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="#">SchoolEventManagementApp</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav">
+      <li><a  class="nav-item nav-link" routerLink='student'>Student</a></li>
+      <li><a  class="nav-item nav-link" routerLink='/event/add-event'>Event</a></li>
+      <li><a  class="nav-item nav-link" href='/event/list-event'>ListEvent</a></li>
+
+    </div>
+  </div>
+</nav> 
+
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+****************
+
+11. Add Event Conponent :
+
+1.add-event.component.html
+
+*************
+<h2 style="text-align: center; color: cornflowerblue;"  id="title">Add Event </h2>
+  
+<form [formGroup]="EventForm" (ngSubmit)="collectEventData()" class="myform" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+      <label>Enter ID</label><br>
+      <input type="text" class="form-control"  formControlName="eventId" placeholder="Enter Id">
+      <span *ngIf="this.EventForm.get('eventId').invalid && this.EventForm.get('eventId').touched" style="color: red;">Id
+        cannot be empty!</span><br>
+     
+      <label>Enter Event Name</label><br>
+       <input type="text" class="form-control" formControlName="eventName" placeholder="Enter Event Name"> <br>
+       
+       <span *ngIf="this.EventForm.get('eventName').invalid && this.EventForm.get('eventName').touched" style="color: red;">Name
+        cannot be empty!</span><br>
+       <button type="submit" id="button" class="btn btn-primary" [disabled]="!EventForm.valid" >Submit</button>
+
+       
+      </div>
+    </form>
+    <div>
+      <h2 style="background-color: red;">{{errorMessage}}</h2>
+  </div>
+*************
+
+2.add-event.component.ts
+
+************
+import { Component, OnInit } from '@angular/core';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
+import { WebapiserviceService } from 'src/app/Services/webapiservice.service';
+
+@Component({
+  selector: 'app-add-event',
+  templateUrl: './add-event.component.html',
+  styleUrls: ['./add-event.component.css']
+})
+export class AddEventComponent implements OnInit {
+  EventForm = new FormGroup({
+    eventId : new FormControl('',[Validators.required]),
+    eventName: new FormControl('',[Validators.required])
+    
+  })
+  errorMessage: any;
+  constructor(private service : WebapiserviceService) { }
+
+  ngOnInit(): void {
+  }
+  collectEventData()
+  {
+   console.warn(this.EventForm.value);
+
+    this.service.post("Events",this.EventForm.value).subscribe((result) =>
+    console.warn(result),
+    error=>this.errorMessage="unable to add Event Please try Again");
+   this.EventForm.reset({});    
+  }
+  
+}
+
+************
+
+12.list-event
+1.list-event.component.html
+
+*****
+<h2 style="text-align: center; color: cornflowerblue;">Events!</h2>
+<table class="table" appHighlight>
+    <thead>
+      <tr>
+        <th scope="col">Id</th>
+        <th scope="col">Name</th>
+        <th scope="col">Delete/Edit</th>
+       
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let  item of collection">
+        <td><a routerLink='/Event/updateevent/{{item.eventId}}'>{{item.eventId}}</a></td>
+        <td>{{item.eventName}}</td>
+
+        <i (click)="deleteEvent(item.eventId)" class="btn btn-primary" style="font-size:20px;color:red;">Delete</i>
+        <i routerLink='/event/updateevent/{{item.eventId}}' class="btn btn-primary" style="font-size:20px;color:red;">Update</i>  
+    </tr>
+    </tbody>
+  </table>
+  <div>
+    <h2 style="background-color:yellowgreen;">{{errorMessage}}</h2>
+</div>
+
+*****
+
+2.list-event.component.ts
+********
+
+export class ListEventComponent implements OnInit {
+  errorMessage: string;
+  collection: any=[];
+
+  constructor(private service:WebapiserviceService) { }
+
+  ngOnInit(): void {
+    this.getEvents()
+  }
+getEvents()
+{
+  this.service.get('Events').subscribe((response)=>{
+    this.collection = response
+    console.warn(this.collection)
+  },(error) => {console.log(error.error),alert(error.error)})
+}
+deleteEvent(item:any)
+  {
+    if(this.canExit()==true)
+    {
+    this.collection.splice(this.collection.length-1,1);
+
+    this.service.delete('Events',item).subscribe((result)=>console.warn(result))
+    }
+  }
+  canExit(): boolean {
+    if (confirm("Are you Sure You Want To  delete")) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+}
+
+********
+
+13.update-event
+
+1.update-event.component.html
+*****
+<h2 style="text-align: center; color: cornflowerblue;" >update-event</h2>
+
+   
+<form [formGroup]="EventFormEdit" (ngSubmit)="collectEventData()" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+      <label>Enter ID</label><br>
+      <input type="text" class="form-control"  formControlName="eventId" placeholder="Enter Id">
+      
+     
+      <label>Enter Event Name</label><br>
+       <input type="text" class="form-control" formControlName="eventName" placeholder="Enter Event Name"> <br>
+       
+      
+       <button type="submit" id="button" class="btn btn-primary" [disabled]="!EventFormEdit.valid" >Submit</button>
+
+       
+      </div>
+    </form>
+*****
+
+2.update-event.component.ts
+*********
+export class UpdateEventComponent implements OnInit {
+  EventFormEdit = new FormGroup({
+    eventId : new FormControl(''),
+    eventName: new FormControl('')
+    
+  })
+  constructor(private service:WebapiserviceService,private router:ActivatedRoute) { }
+
+  ngOnInit(): void {
+    console.warn(this.router.snapshot.params.id)
+    this.service.getById("Events",this.router.snapshot.params.id).subscribe((result: any)=>
+    {
+        this.EventFormEdit=new FormGroup(
+      {
+        eventId:new FormControl(result['eventId']),
+        eventName:new FormControl(result['eventName'])
+        
+      })
+
+    })
+  
+  }
+  collectEventData()
+  {
+    
+    console.warn(this.EventFormEdit.value)
+    this.service.update("Events",this.EventFormEdit.value).subscribe((result)=>{
+    console.warn(result)} ,(error)=>{console.log(error.error)})
+
+  }
+  }
+
+*********
+
+14. Event.module.ts
+
+*****
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+import { EventRoutingModule } from './event-routing.module';
+import { ListEventComponent } from './list-event/list-event.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import{AddEventComponent } from './add-event/add-event.component';
+import { UpdateEventComponent } from './update-event/update-event.component';
+
+
+@NgModule({
+  declarations: [
+    
+
+    ListEventComponent,
+    AddEventComponent,
+    UpdateEventComponent
+  ],
+  imports: [
+    CommonModule,
+    EventRoutingModule,
+    ReactiveFormsModule,
+    FormsModule,
+  ]
+})
+export class EventModule { }
+
+*****

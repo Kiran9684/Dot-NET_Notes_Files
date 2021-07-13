@@ -1,0 +1,24 @@
+<h2 style="text-align: center; color: cornflowerblue;"  id="title">Add Event </h2>
+ 
+   
+<form [formGroup]="EventForm" (ngSubmit)="collectEventData()" class="myform" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+      <label>Enter ID</label><br>
+      <input type="text" class="form-control"  formControlName="eventId" placeholder="Enter Id">
+      <span *ngIf="this.EventForm.get('eventId').invalid && this.EventForm.get('eventId').touched" style="color: red;">Id
+        cannot be empty!</span><br>
+     
+      <label>Enter Event Name</label><br>
+       <input type="text" class="form-control" formControlName="eventName" placeholder="Enter Event Name"> <br>
+       
+       <span *ngIf="this.EventForm.get('eventName').invalid && this.EventForm.get('eventName').touched" style="color: red;">Name
+        cannot be empty!</span><br>
+       <button type="submit" id="button" class="btn btn-primary" [disabled]="!EventForm.valid" >Submit</button>
+
+       
+      </div>
+    </form>
+    <div>
+      <h2 style="background-color: red;">{{errorMessage}}</h2>
+  </div>

@@ -1,0 +1,187 @@
+************************************
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+
+namespace Week1Assignments.FilesExamples
+{
+    class Student
+    {
+        string name;
+        int age;
+
+        public Student(string name, int age)
+        {
+            this.name = name;
+            this.age = age;
+        }
+
+        public static void Main(string[] args)
+        {
+            byte option = displayMainMenu();
+            Student stu = new Student("kiran", 25);
+            string path = "C:\\SampleFiles\\Student.txt";
+            if (option == 1)
+            {
+                //method to write data into the files
+                writeData(path, stu);
+            }
+            else if (option == 2)
+            {
+                //method to read data from files
+                readData(path);
+            }
+            else if (option == 3)
+            {
+                //method call to update data in file 
+                update(path);
+            }
+            else if (option == 4)
+            {
+                //method call to delete file
+                deleteFile(path);
+            }
+        }
+
+        private static byte displayMainMenu()
+        {
+            Console.WriteLine("Enter 1 To Write Data ");
+            Console.WriteLine("Enter 2 To Read Data");
+            Console.WriteLine("Enter 3 To Update Data");
+            Console.WriteLine("Enter 4 To Delete Data");
+            byte option = Convert.ToByte(Console.ReadLine());
+            return option;
+        }
+
+        private static void update(string path)
+        {
+            FileStream stream3 = new FileStream(path, FileMode.Open, FileAccess.Read);
+            StreamReader reader = new StreamReader(stream3);
+            
+            if (stream3.CanRead)
+            {
+                string data = reader.ReadToEnd();
+                reader.Close();
+                data = data.Replace("kiran", "Mindtree");
+                data = data.Replace("25", "30");
+                // Console.WriteLine("Updated Name"+data);
+                StreamWriter writer = new StreamWriter(path);
+                writer.WriteLine(data);
+                writer.Close();
+            }     
+            stream3.Close();
+        }
+
+        private static void deleteFile(string path)
+        {
+            File.Delete(path);
+        }
+
+        private static void readData(string path)
+        {
+            FileStream stream2 = new FileStream(path, FileMode.Open, FileAccess.Read);
+            StreamReader read = new StreamReader(stream2);
+            if (stream2.CanRead )
+            {
+                Console.WriteLine("File Contents Are ");
+                Console.WriteLine(read.ReadToEnd());
+            }
+            read.Close();
+            stream2.Close();
+        }
+
+        private static void writeData(string path, Student stu)
+        {
+            FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write);
+            StreamWriter writer = new StreamWriter(stream);
+            if (stream.CanWrite)
+            {
+                string str = "";
+                str = str + Convert.ToString(stu.name);
+                writer.WriteLine(str);
+                str = "";
+                str = str + Convert.ToString(stu.age);
+                writer.WriteLine(str);
+            }
+            writer.Close();
+            stream.Close();
+        }
+    }
+}
+****************************
+
+
+*****************
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+
+namespace Week1Assignments.FilesExamples
+{
+    class Student2
+    {
+        int age;
+        string name;
+
+        public Student2(int age, string name)
+        {
+            this.age = age;
+            this.name = name;
+        }
+
+        public static void Main(string[]args)
+        {
+            Student2 stu = new Student2(12,"kiran");
+            string filePath = "C:\\SampleFiles\\Student2.txt";
+
+            //method call to write file
+            writeFile(filePath,stu);
+            //method call to read data from file 
+            readFile(filePath);
+            //method call to update data in file 
+            updateFile(filePath);
+            //method call to delete data from the file 
+            // deleteData(filePath);
+        }
+
+        private static void updateFile(string filePath)
+        {
+            string data = File.ReadAllText(filePath);
+            data = data.Replace("kiran", "MindTree");
+            File.WriteAllText(filePath,data);
+        }
+
+      /*  private static void deleteData(string filePath)
+        {
+
+            string str = "";
+            File.WriteAllText(filePath, str);
+        } */
+
+        private static void readFile(string filePath)
+        {
+            Console.WriteLine(File.ReadAllText(filePath));
+        }
+
+        private static void writeFile(string filePath ,Student2 stu)
+        {
+            string str = "";
+            str = str + Convert.ToString(stu.name)+" ";
+            str = str + Convert.ToString(stu.age)+" ";
+            File.WriteAllText(filePath, str);
+            //File.WriteAllText(filePath, Convert.ToString(stu.age));
+        }
+    }
+}
+
+*****************
+
+****
+ string path = @"C:\Users\Aniket\Desktop\Coding Challenge\ConsoleApp1\ConsoleApp1\File.txt";
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+****

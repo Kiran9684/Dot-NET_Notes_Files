@@ -1,0 +1,24 @@
+<h2 style="text-align: center; color: cornflowerblue;">Events!</h2>
+<table class="table" appHighlight>
+    <thead>
+      <tr>
+        <th scope="col">Id</th>
+        <th scope="col">Name</th>
+        <th scope="col">Delete/Edit</th>
+       
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let  item of collection">
+        <td><a routerLink='/Event/updateevent/{{item.eventId}}'>{{item.eventId}}</a></td>
+        <td>{{item.eventName}}</td>
+
+        <i (click)="deleteEvent(item.eventId)" class="btn btn-primary" style="font-size:20px;color:red;">Delete</i>
+        <i routerLink='/event/updateevent/{{item.eventId}}' class="btn btn-primary" style="font-size:20px;color:red;">Update</i>  
+    </tr>
+    </tbody>
+  </table>
+  <div>
+    <h2 style="background-color:yellowgreen;">{{errorMessage}}</h2>
+</div>
+

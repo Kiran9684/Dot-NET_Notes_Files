@@ -1,0 +1,18 @@
+<p>update-product works!</p>
+
+<div *ngIf="alert" class="alert alert-warning alert-dismissible fade show" role="alert" >
+    <strong>Success!</strong> Data Updated succesfully
+    <button (click)="closeAlert()" type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+
+<form [formGroup]="updateProduct" (ngSubmit)="collectNewProduct()" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+    <label>Product Price </label>
+      <input type="text" class="form-control"  formControlName="price" placeholder="Enter Price">
+       <br>
+      <button type="submit" class="btn btn-primary" [disabled]="!updateProduct.valid" >Update</button>
+      </div>
+    </form>

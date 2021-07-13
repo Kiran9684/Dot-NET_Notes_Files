@@ -1,0 +1,24 @@
+<h2 id="title" style="text-align: center; color: cornflowerblue;">Add Student </h2>
+   
+<form [formGroup]="studentForm" (ngSubmit)="collectStudentData()" class="myform" appHighlight>
+    <div 
+    style="padding-left: 100;margin-left: 300px;margin-top: 70px;margin-bottom: 70px;margin-right: 300px;padding-bottom: 50px;padding-top: 50px;">
+    <label>Enter the event</label>
+      <br>
+      <select  formControlName="eventId"  style="width: 450px ;height: 30px;">  
+         
+        <option *ngFor="let event of eventList" value={{event.eventId}}>{{event.eventName}} </option>  
+      </select>
+      <br> 
+    
+     
+      <label>Enter Name</label><br>
+       <input type="text" class="form-control" formControlName="studentName" placeholder="Enter Name">
+        
+       <label>Enter  student ID</label><br>
+       <input type="text" class="form-control" formControlName="studentId" placeholder="Enter Id">
+      <br>
+       <button type="submit" id="button" class="btn btn-primary" [disabled]="!studentForm.valid" >Submit</button>
+      </div>
+    </form>
+

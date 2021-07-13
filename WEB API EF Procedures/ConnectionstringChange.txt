@@ -1,0 +1,74 @@
+ 
+1. In your DB Context class :
+
+public class UserDBContext :DbContext
+    {
+
+        public DbSet<SelectedUser> SelectedUsers { get; set; }
+
+        public UserDBContext(DbContextOptions<UserDBContext> options ) : base(options)
+        {
+            
+        }
+    }
+
+2.then go to appp settings.json and add this line 
+
+{
+  "ConnectionStrings" : { "DefaultConnection" :"Data Source=.;Initial Catalog=ProdCustomerCCDB;Integrated Security=True"}    <<---------
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+  "AllowedHosts": "*"
+}
+
+3. Goto Startup file and in configureServices method add this line .
+
+ public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<UserDBContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));    <<<--------
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "UsersWebAPI", Version = "v1" });
+            });
+        }
+
+
+4. In your service file :
+
+
+ public class SelectedUserService : ISelectedUserService
+    {
+        private readonly UserDBContext _context;                <<<< ---------
+
+        public SelectedUserService(UserDBContext context)              <<<<-------------
+        {
+            _context = context;
+        }
+
+
+        public bool AddUser(SelectedUser selectedUser)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DeleteUser(int Id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public SelectedUser GetUserById(int Id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool UpdateUser(SelectedUser selectedUser)
+        {
+            throw new NotImplementedException();
+        }
+    }

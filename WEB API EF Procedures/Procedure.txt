@@ -1,0 +1,67 @@
+/********Code First Approach****************************************/
+1. First create project -Asp.net core web api
+2. After creating the project install these packages
+		1.Microsoft.EntityFrameworkCore.SqlServer
+		2.Microsoft.EntityFrameworkCore.Tools 
+3.Create your entities
+4.Create Context class
+5.After creating entities and Context class ->Add migrations to create database
+		-2 migration commands are used  1) add-migration<migration name> and 2) update-database.
+6.Add Service layers [Use Interface to define functionalities in that and then implement these Interface in your service class]
+7.Then use the context class object in service layer to perform CRUD operations in service layer
+8.Then finally use methods of service layer in API Controller class 
+
+
+
+/*************************Data Base First Approach *******************/
+1.we need to do reverse engineering using the Scaffold-DbContext command. 
+  This reverse engineering command creates entity and context classes (by deriving DbContext) based on the schema of the existing database.
+
+2.Use Scaffold-DbContext to create a model based on your existing database.
+
+3.Install 2 Packages 
+	- Microsoft.EntityFrameworkCore.SqlServer
+	- Microsoft.EntityFrameworkCore.Tools
+
+3.In Visual Studio, select menu Tools -> NuGet Package Manger -> Package Manger Console and run the following command:
+
+PM> Scaffold-DbContext "Server=.;Database=SchoolDB;Trusted_Connection=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models
+
+
+4) Add Service
+	- add interface (IEntityService)
+	- implement interface in normal class (EntityService)
+	-Use context class in this.
+
+5) Add controller 
+
+6) Add Swagger
+Install package - Swashbuckle.AspNetCore
+======= Inside Configure Services ===============
+ 
+ services.AddSwaggerGen(c => {  
+        c.SwaggerDoc("v1", new Info {  
+            Version = "v1",  
+                Title = "Test API",  
+                Description = "ASP.NET Core Web API"  
+        });  
+    });
+
+
+========= Inside Configure ====================
+
+app.UseSwagger();  
+    app.UseSwaggerUI(c => {  
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Test API V1");  
+    });  
+
+
+**************************Dependency Injection **************************
+services.AddSingleton<IFriendService, FriendService>();   ->>>> Startup file
+
+ private IFriendService _friendService;   -> In controller class
+
+        public FriendController(IFriendService friendService)
+        {
+            _friendService = friendService;
+        }
